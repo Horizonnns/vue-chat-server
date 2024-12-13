@@ -38,6 +38,25 @@ io.on('connection', (socket) => {
 		io.emit('update_users', users); // Обновляем статус всех пользователей
 	});
 
+	// Когда пользователь отключается
+	socket.on('disconnect', () => {
+		const user = Object.keys(users).find(
+			(key) => users[key].socketId === socket.id
+		);
+
+		if (user) {
+			users[user].isOnline = false;
+			users[user].lastSeen = new Date().toLocaleTimeString([], {
+				hour: '2-digit',
+				minute: '2-digit',
+				hour12: false, // 24-часовой формат
+			}); // Устанавливаем время последнего выхода
+
+			io.emit('update_users', users); // Обновляем статус всех пользователей
+		}
+	});
+
+
 	// Обрабатываем подключение нового пользователя
 	socket.on('join', (data) => {
 		const userName = data.userName || 'Гость';
