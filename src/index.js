@@ -85,6 +85,40 @@ io.on('connection', (socket) => {
 		}); // Отправляем данные создателя клиенту
 	});
 
+	// Подключение к комнате по паролю
+	socket.on('join_room', ({ userName, password }, callback) => {
+		const room = rooms[password];
+
+		if (!room) {
+			return callback({
+				success: false,
+				message: 'Комната с таким паролем не существует.',
+			});
+		}
+
+		if (room.users.includes(userName)) {
+			return callback({
+				success: false,
+				message: 'Пользователь с таким именем уже подключен.',
+			});
+		}
+
+		socket.data.userName = userName; // Сохраняем имя пользователя
+		room.users.push(userName); // Добавляем пользователя в комнату
+		socket.join(password); // Подключаем пользователя к комнате
+		console.log(`${userName} joined room: ${password}`);
+
+		// Передаем имя и статус создателя новому участнику
+		callback({
+			success: true,
+			creator: room.creator,
+			creatorStatus: users[room.creator], // Передаем статус создателя
+		});
+
+		// Уведомляем остальных пользователей в комнате о новом участнике
+		socket.to(password).emit('user_joined', userName);
+	});
+
 
 	// Обрабатываем подключение нового пользователя
 	socket.on('join', (data) => {
