@@ -1,12 +1,12 @@
-const { Pool } = require('pg');
+const mysql = require('mysql2');
 require('dotenv').config();
 
-const pool = new Pool({
-	user: process.env.DB_USER,
-	host: process.env.DB_HOST,
-	database: process.env.DB_NAME,
-	password: process.env.DB_PASS,
-	port: process.env.DB_PORT,
+// Создаем соединение
+const db = mysql.createConnection({
+	host: process.env.DB_HOST || 'localhost',
+	user: process.env.DB_USER || 'root',
+	password: process.env.DB_PASSWORD || '',
+	database: process.env.DB_NAME || 'vue-chat',
 });
 
-module.exports = pool;
+module.exports = db;
