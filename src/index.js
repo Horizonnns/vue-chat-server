@@ -135,40 +135,35 @@ io.on('connection', (socket) => {
 	// Обрабатываем подключение нового пользователя
 	socket.on('join', (data) => {
 		const userName = data.userName || 'Гость';
-		// Рассылаем сообщение о подключении
-
 		console.log(`User joined: ${userName}`); // Логируем имя пользователя
 		socket.broadcast.emit('user_connected', userName);
 	});
 
-	socket.on('user_connected', (user) => {
-		console.log('New user connected:', user); // Логируем имя нового пользователя
-		this.showConnectedUser(user);
-	});
-
-	socket.on('send_message', async (message) => {
-		try {
-			console.log('New message:', message);
-			io.emit('new_message', message);
-
-			// Сохранение сообщения в базу
-			await pool.query(
-				'INSERT INTO messages (sender_id, content) VALUES ($1, $2)',
-				[message.sender, message.text]
-			);
-		} catch (error) {
-			console.error('Error saving message:', error);
-			io.emit('error', { message: 'Failed to save message' });
-		}
-	});
-
+	// Отправка файлов
 	socket.on('send_file', (fileData) => {
 		console.log('New file received:', fileData.fileName);
 		io.emit('new_file', fileData); // Рассылка файла всем
 	});
 
-	socket.on('disconnect', () => {
-		console.log('User disconnected:', socket.id);
+	// Пользователь покидает комнату
+	socket.on('leave_room', ({ userName, password }) => {
+		if (rooms[password]) {
+			rooms[password].users = rooms[password].users.filter(
+				(user) => user !== userName
+			);
+			io.to(password).emit('user_left', userName);
+			if (rooms[password].users.length === 0) {
+				delete rooms[password]; // Удаляем комнату, если она пуста
+			}
+		}
+	});
+
+	// Удаление комнаты (создателем)
+	socket.on('delete_room', ({ password }) => {
+		if (rooms[password]) {
+			io.to(password).emit('room_deleted');
+			delete rooms[password]; // Удаляем комнату
+		}
 	});
 });
 
