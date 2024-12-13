@@ -3,7 +3,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 const bodyParser = require('body-parser');
 const chatRoutes = require('./routes/chat');
-const pool = require('./db/db');
+const db = require('./db/db.js'); // Импорт подключения к MySQL
 
 require('dotenv').config();
 
@@ -20,6 +20,9 @@ const io = new Server(server, {
 app.use(bodyParser.json());
 app.use('/uploads', express.static('uploads')); // Доступ к файлам
 app.use('/api/chat', chatRoutes); // Роуты API
+
+const rooms = {}; // Хранилище для комнат и пользователей
+const users = {}; // { userName: { socketId, lastSeen, isOnline } }
 
 // Socket.IO события
 io.on('connection', (socket) => {
