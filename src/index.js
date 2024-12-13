@@ -119,6 +119,18 @@ io.on('connection', (socket) => {
 		socket.to(password).emit('user_joined', userName);
 	});
 
+	// Отправка сообщения в комнату
+	socket.on('send_message', ({ password, userName, message, currentTime }) => {
+		const room = rooms[password];
+		if (room) {
+			console.log(`Message from ${userName} in room ${password}: ${message}`);
+			io.to(password).emit('new_message', {
+				userName,
+				message,
+				time: currentTime,
+			}); // Добавляем поле time
+		}
+	});
 
 	// Обрабатываем подключение нового пользователя
 	socket.on('join', (data) => {
