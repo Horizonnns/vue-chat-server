@@ -28,6 +28,16 @@ const users = {}; // { userName: { socketId, lastSeen, isOnline } }
 io.on('connection', (socket) => {
 	console.log(`User connected: ${socket.id}`);
 
+	// Когда пользователь подключается
+	socket.on('user_connected', (userName) => {
+		users[userName] = {
+			socketId: socket.id,
+			lastSeen: null,
+			isOnline: true,
+		};
+		io.emit('update_users', users); // Обновляем статус всех пользователей
+	});
+
 	// Обрабатываем подключение нового пользователя
 	socket.on('join', (data) => {
 		const userName = data.userName || 'Гость';
