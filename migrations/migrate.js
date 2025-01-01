@@ -16,19 +16,15 @@ const migrationQueries = migrationSQL
 async function runMigrations() {
 	try {
 		for (const query of migrationQueries) {
-			await new Promise((resolve, reject) => {
-				db.query(query, (err, result) => {
-					if (err) return reject(err);
-					console.log('Migration executed:', query);
-					resolve(result);
-				});
-			});
+			// Выполняем запросы последовательно с использованием Promises
+			await db.query(query);
+			console.log('Migration executed:', query);
 		}
 		console.log('Migrations applied successfully!');
 	} catch (err) {
 		console.error('Error running migrations:', err.message);
 	} finally {
-		db.end(); // Закрываем соединение с базой данных
+		await db.end(); // Закрываем соединение с базой данных
 	}
 }
 
